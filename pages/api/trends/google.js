@@ -1,43 +1,32 @@
-// /api/trends/google.js
-import axios from "axios";
+import googleTrends from "google-trends-api";
 
-const handler = async (req, res) => {
-  const { term = "marketing", geo = "BR" } = req.query;
+export default async function handler(req, res) {
+  const { term = "IA", geo = "BR" } = req.query;
 
   try {
-    const response = await axios.get(`https://trends.google.com/trends/api/explore`, {
-      params: {
-        hl: "pt-BR",
-        tz: "-180",
-        req: JSON.stringify({
-          comparisonItem: [{ keyword: term, geo, time: "now 7-d" }],
-          category: 0,
-          property: "",
-        }),
-        tz: 180,
-      },
-      headers: {
-        "User-Agent": "Mozilla/5.0",
-      },
+    const results = await googleTrends.interestOverTime({
+      keyword: term,
+      geo,
+      startTime: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // últimos 7 dias
     });
 
-    const raw = response.data;
-    const cleaned = raw.replace(")]}',", ""); // remove lixo inicial
-    const json = JSON.parse(cleaned);
+    const parsed = JSON.parse(results);
+    const timelineData = parsed.default.timelineData;
 
-    const keyword = json.widgets[0].request.comparisonItem[0].keyword;
-    const time = json.widgets[0].request.comparisonItem[0].time;
-    const region = json.widgets[0].request.comparisonItem[0].geo;
+    const ultimaEntrada = timelineData[timelineData.length - 1];
+    const popularidade = ultimaEntrada.value[0];
 
     res.status(200).json({
-      termo: keyword,
-      periodo: time,
-      local: region,
-      status: "Tendência detectada com sucesso"
+      termo: term,
+      periodo: "últimos 7 dias",
+      local: geo,
+      popularidade,
+      status: "Tendência detectada com sucesso",
     });
   } catch (err) {
-    res.status(500).json({ error: "Erro ao buscar tendências do Google" });
+    res.status(500).json({
+      error: "Erro ao buscar dados de tendência via google-trends-api",
+      detalhes: err.message,
+    });
   }
-};
-
-export default handler;
+}
