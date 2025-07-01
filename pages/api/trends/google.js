@@ -13,6 +13,17 @@ export default async function handler(req, res) {
     const parsed = JSON.parse(results);
     const timelineData = parsed.default.timelineData;
 
+    // ✅ Caso não haja dados suficientes
+    if (!timelineData || timelineData.length === 0) {
+      return res.status(200).json({
+        termo: term,
+        periodo: "últimos 7 dias",
+        local: geo,
+        popularidade: 0,
+        status: "Sem dados suficientes para esse termo",
+      });
+    }
+
     const ultimaEntrada = timelineData[timelineData.length - 1];
     const popularidade = ultimaEntrada.value[0];
 
