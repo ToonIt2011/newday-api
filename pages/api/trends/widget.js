@@ -3,39 +3,38 @@ import * as cheerio from "cheerio";
 
 export default async function handler(req, res) {
   try {
-    const { data } = await axios.get("https://trends.google.com/trends/trendingsearches/daily?geo=BR");
-    const $ = cheerio.load(data);
+    const { data } = await axios.get("https://trends.google.com/trends/trendingsearches/daily/rss?geo=BR");
+
+    const $ = cheerio.load(data, { xmlMode: true });
 
     const resultados = [];
 
-    $(".feed-list-wrapper .feed-item").each((i, el) => {
-      const title = $(el).find(".details-top a").text().trim();
-      const link = "https://trends.google.com" + $(el).find(".details-top a").attr("href");
-      const buscas = $(el).find(".search-count-title").text().trim();
-      const categoria = $(el).find(".search-count-subtitle").text().trim();
+    $("item").each((i, el) => {
+      const titulo = $(el).find("title").text();
+      const descricao = $(el).find("ht\\:approx_traffic").text();
+      const link = $(el).find("link").text();
 
       resultados.push({
-        titulo: title || "Sem título",
-        link: link || "",
-        buscas: buscas || "Número de buscas não identificado",
-        categoria: categoria || "Categoria não informada",
+        titulo,
+        buscas: descricao || "Volume não informado",
+        link,
       });
     });
 
     if (resultados.length === 0) {
       return res.status(200).json({
-        status: "Sem resultados visíveis no momento.",
+        status: "Nenhuma tendência encontrada no feed RSS",
         resultados: [],
       });
     }
 
     res.status(200).json({
-      status: "Tópicos em alta carregados com sucesso",
+      status: "Tendências diárias carregadas com sucesso",
       resultados,
     });
   } catch (error) {
     res.status(500).json({
-      error: "Erro ao buscar tópicos em alta com Cheerio",
+      error: "Erro ao processar o feed RSS do Google Trends",
       detalhes: error.message,
     });
   }
