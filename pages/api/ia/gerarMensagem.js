@@ -26,9 +26,11 @@ export default async function handler(req, res) {
       model: "llama3-70b-8192", // modelo atualizado e suportado
     });
 
-    const textoGerado = resposta.choices[0]?.message?.content;
+    const textoGerado = resposta.choices[0]?.message?.content?.replace(/^"+|"+$/g, '');
 
-    res.status(200).json({ mensagem: textoGerado || "Mensagem gerada com sucesso!" });
+    res.status(200).json({
+      mensagem: textoGerado || "Mensagem gerada com sucesso!",
+    });
   } catch (error) {
     res.status(500).json({
       error: "Erro ao gerar mensagem com IA",
