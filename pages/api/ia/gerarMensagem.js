@@ -8,6 +8,17 @@ const groq = new Groq({
 });
 
 export default async function handler(req, res) {
+  // 👇 Cabeçalhos CORS
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  // 👇 Tratamento para pré-requisição (preflight)
+  if (req.method === "OPTIONS") {
+    res.status(200).end();
+    return;
+  }
+
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Método não permitido" });
   }
@@ -23,7 +34,7 @@ export default async function handler(req, res) {
 
     const resposta = await groq.chat.completions.create({
       messages: [{ role: "user", content: prompt }],
-      model: "llama3-70b-8192", // modelo atualizado e suportado
+      model: "llama3-70b-8192",
     });
 
     const textoGerado = resposta.choices[0]?.message?.content?.replace(/^"+|"+$/g, '');
