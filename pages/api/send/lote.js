@@ -1,7 +1,6 @@
 import axios from "axios";
 
 export default async function handler(req, res) {
-  // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -27,7 +26,7 @@ export default async function handler(req, res) {
 
   let sucesso = 0;
   let falha = 0;
-  let erros = [];
+  const resultados = [];
 
   for (const numero of numeros) {
     try {
@@ -46,11 +45,15 @@ export default async function handler(req, res) {
         sucesso++;
       } else {
         falha++;
-        erros.push({ numero, resposta: response.data });
       }
+
+      resultados.push({ numero, resultado: response.data });
     } catch (error) {
       falha++;
-      erros.push({ numero, erro: error.response?.data || error.message });
+      resultados.push({
+        numero,
+        erro: error.response?.data || error.message,
+      });
     }
   }
 
@@ -58,6 +61,6 @@ export default async function handler(req, res) {
     status: "Campanha finalizada",
     sucesso,
     falha,
-    erros,
+    resultados,
   });
 }
