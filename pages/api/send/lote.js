@@ -1,12 +1,10 @@
-// pages/api/send/lote.js
-
 import axios from "axios";
 import { createClient } from "@supabase/supabase-js";
 
-// Supabase init
+// Configuração do Supabase
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+  process.env.SUPABASE_API_KEY
 );
 
 export default async function handler(req, res) {
@@ -26,8 +24,8 @@ export default async function handler(req, res) {
 
   const { numeros, mensagem, tema } = req.body;
 
-  if (!Array.isArray(numeros) || !mensagem) {
-    return res.status(400).json({ error: "Números e mensagem são obrigatórios" });
+  if (!Array.isArray(numeros) || !mensagem || !tema) {
+    return res.status(400).json({ error: "Números, mensagem e tema são obrigatórios" });
   }
 
   const instanceId = process.env.ULTRAMSG_INSTANCE_ID;
@@ -36,7 +34,7 @@ export default async function handler(req, res) {
 
   let sucesso = 0;
   let falha = 0;
-  let resultados = [];
+  let erros = [];
 
   for (const numero of numeros) {
     try {
@@ -48,40 +46,36 @@ export default async function handler(req, res) {
 
       if (response.data?.sent === "true" || response.data?.message === "ok") {
         sucesso++;
-        resultados.push({ numero, status: "sucesso" });
       } else {
         falha++;
-        resultados.push({ numero, status: "falha", resposta: response.data });
+        erros.push({ numero, resposta: response.data });
       }
     } catch (error) {
       falha++;
-      resultados.push({ numero, status: "falha", erro: error.response?.data || error.message });
+      erros.push({ numero, erro: error.response?.data || error.message });
     }
   }
 
-  // Salvar no Supabase
-  const { error } = await supabase.from("campanhas").insert([
-    {
-      tema,
-      mensagem,
-      numeros: numeros.join(", "),
-      sucesso,
-      falha,
-      resultados,
-    },
-  ]);
+  // Agora vamos salvar os dados da campanha na tabela do Supabase
+  const { data, error } = await supabase
+    .from("campanhas")
+    .insert([
+      {
+        tema: tema,
+        mensagem: mensagem,
+        numeros: numeros.join(", "),  // Salvando números como string separada por vírgulas
+      }
+    ]);
 
   if (error) {
-    return res.status(500).json({
-      error: "Erro ao salvar campanha no Supabase",
-      detalhes: error.message,
-    });
+    return res.status(500).json({ error: "Erro ao salvar a campanha no Supabase", detalhes: error.message });
   }
 
   return res.status(200).json({
     status: "Campanha finalizada",
     sucesso,
     falha,
-    resultados,
+    erros,
+    campanha_salva: data, // Retorna a campanha salva
   });
 }
