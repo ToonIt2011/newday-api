@@ -37,7 +37,12 @@ export default async function handler(req, res) {
         body: mensagem,
       });
 
-      if (response.data?.sent === "true" || response.data?.message === "ok") {
+      const enviado =
+        response.data?.sent === true ||
+        response.data?.sent === "true" ||
+        response.data?.message === "ok";
+
+      if (enviado) {
         sucesso++;
       } else {
         falha++;
