@@ -1,6 +1,16 @@
+// pages/api/send/lote.js
+
 import axios from "axios";
+import { createClient } from "@supabase/supabase-js";
+
+// Supabase init
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 export default async function handler(req, res) {
+  // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -14,7 +24,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Método não permitido" });
   }
 
-  const { numeros, mensagem } = req.body;
+  const { numeros, mensagem, tema } = req.body;
 
   if (!Array.isArray(numeros) || !mensagem) {
     return res.status(400).json({ error: "Números e mensagem são obrigatórios" });
@@ -26,7 +36,7 @@ export default async function handler(req, res) {
 
   let sucesso = 0;
   let falha = 0;
-  const resultados = [];
+  let resultados = [];
 
   for (const numero of numeros) {
     try {
@@ -36,25 +46,36 @@ export default async function handler(req, res) {
         body: mensagem,
       });
 
-      const enviado =
-        response.data?.sent === true ||
-        response.data?.sent === "true" ||
-        response.data?.message === "ok";
-
-      if (enviado) {
+      if (response.data?.sent === "true" || response.data?.message === "ok") {
         sucesso++;
+        resultados.push({ numero, status: "sucesso" });
       } else {
         falha++;
+        resultados.push({ numero, status: "falha", resposta: response.data });
       }
-
-      resultados.push({ numero, resultado: response.data });
     } catch (error) {
       falha++;
-      resultados.push({
-        numero,
-        erro: error.response?.data || error.message,
-      });
+      resultados.push({ numero, status: "falha", erro: error.response?.data || error.message });
     }
+  }
+
+  // Salvar no Supabase
+  const { error } = await supabase.from("campanhas").insert([
+    {
+      tema,
+      mensagem,
+      numeros: numeros.join(", "),
+      sucesso,
+      falha,
+      resultados,
+    },
+  ]);
+
+  if (error) {
+    return res.status(500).json({
+      error: "Erro ao salvar campanha no Supabase",
+      detalhes: error.message,
+    });
   }
 
   return res.status(200).json({
