@@ -44,6 +44,8 @@ export default async function handler(req, res) {
   // Envio das mensagens para os números
   for (const numero of numeros) {
     try {
+      console.log(`📤 Enviando para o número: ${numero}`); // Log antes de cada envio
+
       const response = await axios.post(url, {
         token,
         to: numero,
@@ -59,6 +61,7 @@ export default async function handler(req, res) {
     } catch (error) {
       falha++;
       erros.push({ numero, erro: error.response?.data || error.message });
+      console.error(`Erro ao enviar para o número: ${numero}`, error); // Log de erro detalhado
     }
   }
 
