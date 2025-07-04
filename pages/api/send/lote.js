@@ -23,6 +23,7 @@ export default async function handler(req, res) {
   }
 
   const { numeros, mensagem, tema } = req.body;
+console.log("🎯 Dados recebidos no body:", req.body);
 
   // Verificação dos parâmetros
   if (!Array.isArray(numeros) || !mensagem || !tema) {
