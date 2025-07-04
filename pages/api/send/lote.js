@@ -22,11 +22,14 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Método não permitido" });
   }
 
-  const { numeros, mensagem, tema } = req.body;
+  // Log para verificar os dados recebidos no backend
   console.log("🎯 Dados recebidos no body:", req.body);
 
-  // Verificação dos parâmetros
-  if (!Array.isArray(numeros) || !mensagem || !tema) {
+  const { numeros, mensagem, tema } = req.body;
+
+  // Verificação dos parâmetros obrigatórios
+  if (!Array.isArray(numeros) || !numeros.length || !mensagem || !tema) {
+    console.error("Erro: Dados incompletos", req.body);
     return res.status(400).json({ error: "Números, mensagem e tema são obrigatórios" });
   }
 
