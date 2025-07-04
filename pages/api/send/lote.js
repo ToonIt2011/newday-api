@@ -65,35 +65,35 @@ export default async function handler(req, res) {
   console.log("🏷️ Tema:", tema);
 
   // Salvando os dados da campanha na tabela do Supabase
-  try {
-    const { data, error } = await supabase
-      .from("campanhas")
-      .insert([
-        {
-          tema: tema,
-          mensagem: mensagem,
-          numeros: numeros,  // Agora números são armazenados como array de texto
-          sucesso: sucesso,
-          falha: falha,
-          resultados: erros, // Usando o array de erros (opcional)
-        }
-      ]);
+try {
+  const { data, error } = await supabase
+    .from("campanhas")
+    .insert([
+      {
+        tema: tema,
+        mensagem: mensagem,
+        numeros: numeros,  // Agora números são armazenados como array de texto
+        sucesso: sucesso,
+        falha: falha,
+        resultados: erros, // Usando o array de erros (opcional)
+      }
+    ]);
 
-    if (error) {
-      console.error("Erro ao salvar no Supabase:", error);
-      return res.status(500).json({ error: "Erro ao salvar a campanha no Supabase", detalhes: error.message });
-    }
-
-    // Resposta com o status da campanha
-    return res.status(200).json({
-      status: "Campanha finalizada",
-      sucesso,
-      falha,
-      erros,
-      campanha_salva: data, // Retorna a campanha salva
-    });
-  } catch (error) {
-    console.error("Erro ao tentar salvar no Supabase:", error);
-    return res.status(500).json({ error: "Erro ao tentar salvar a campanha no Supabase", detalhes: error.message });
+  if (error) {
+    console.error("Erro ao salvar no Supabase:", error);
+    console.error("Detalhes do erro:", error.message); // Captura mais detalhes do erro
+    return res.status(500).json({ error: "Erro ao salvar a campanha no Supabase", detalhes: error.message });
   }
+
+  // Resposta com o status da campanha
+  return res.status(200).json({
+    status: "Campanha finalizada",
+    sucesso,
+    falha,
+    erros,
+    campanha_salva: data, // Retorna a campanha salva
+  });
+} catch (error) {
+  console.error("Erro ao tentar salvar no Supabase:", error);
+  return res.status(500).json({ error: "Erro ao tentar salvar a campanha no Supabase", detalhes: error.message });
 }
