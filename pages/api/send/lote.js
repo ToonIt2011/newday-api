@@ -23,7 +23,7 @@ export default async function handler(req, res) {
   }
 
   const { numeros, mensagem, tema } = req.body;
-console.log("🎯 Dados recebidos no body:", req.body);
+  console.log("🎯 Dados recebidos no body:", req.body);
 
   // Verificação dos parâmetros
   if (!Array.isArray(numeros) || !mensagem || !tema) {
@@ -60,37 +60,18 @@ console.log("🎯 Dados recebidos no body:", req.body);
   }
 
   // Log para depurar dados da campanha
-  console.log("Campanha enviada para:", numeros);
-  console.log("Mensagem:", mensagem);
-  console.log("Tema:", tema);
+  console.log("📤 Campanha enviada para:", numeros);
+  console.log("💬 Mensagem:", mensagem);
+  console.log("🏷️ Tema:", tema);
 
-  // Salvando os dados da campanha na tabela do Supabase
-  try {
-    const { data, error } = await supabase
-      .from("campanhas")
-      .insert([
-        {
-          tema: tema,
-          mensagem: mensagem,
-          numeros: numeros.join(", "),  // Salvando números como string separada por vírgulas
-        }
-      ]);
+  // ⛔ Supabase temporariamente desativado para testes
+  console.log("📦 Simulação: campanha não salva no Supabase (modo de teste)");
 
-    if (error) {
-      console.error("Erro ao salvar no Supabase:", error);
-      return res.status(500).json({ error: "Erro ao salvar a campanha no Supabase", detalhes: error.message });
-    }
-
-    // Resposta com o status da campanha
-    return res.status(200).json({
-      status: "Campanha finalizada",
-      sucesso,
-      falha,
-      erros,
-      campanha_salva: data, // Retorna a campanha salva
-    });
-  } catch (error) {
-    console.error("Erro ao tentar salvar no Supabase:", error);
-    return res.status(500).json({ error: "Erro ao tentar salvar a campanha no Supabase", detalhes: error.message });
-  }
+  // Resposta com o status da campanha (sem salvar no Supabase)
+  return res.status(200).json({
+    status: "Campanha finalizada (teste sem Supabase)",
+    sucesso,
+    falha,
+    erros,
+  });
 }
