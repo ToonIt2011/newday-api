@@ -1,4 +1,5 @@
-import puppeteer from "puppeteer";
+import chromium from "chrome-aws-lambda";
+import puppeteer from "puppeteer-core";
 
 export default async function handler(req, res) {
   const { tag = "musica" } = req.query;
@@ -12,8 +13,12 @@ export default async function handler(req, res) {
   let browser;
   try {
     browser = await puppeteer.launch({
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      args: chromium.args,
+      executablePath: await chromium.executablePath,
+      headless: chromium.headless,
+      defaultViewport: chromium.defaultViewport,
     });
+
     const page = await browser.newPage();
 
     await page.setUserAgent(
@@ -43,7 +48,6 @@ export default async function handler(req, res) {
       })
     );
 
-    // Opcional: pegar hashtags relacionadas
     const hashtags = await page.$$eval("a[href*='/tag/']", (nodes) =>
       [...new Set(nodes.map((n) => n.textContent.replace("#", "").trim()))]
     );
