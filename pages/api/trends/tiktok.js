@@ -7,26 +7,31 @@ export default async function handler(req, res) {
   let browser;
 
   try {
+    const executablePath = await chromium.executablePath();
+
     browser = await puppeteer.launch({
       args: chromium.args,
       defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath(),
-      headless: chromium.headless,
+      executablePath: executablePath || '/usr/bin/chromium-browser', // fallback para local
+      headless: chromium.headless !== undefined ? chromium.headless : true,
+      ignoreHTTPSErrors: true,
     });
 
     const page = await browser.newPage();
 
-    await page.goto(`https://www.tiktok.com/tag/${tag}`, {
-      waitUntil: 'networkidle2',
+    await page.goto(`https://www.tiktok.com/tag/${encodeURIComponent(tag)}`, {
+      waitUntil: 'domcontentloaded',
     });
 
     const data = await page.evaluate(() => {
       const videos = [];
-      document.querySelectorAll('div[data-e2e="challenge-video-list-item"]').forEach(video => {
-        const link = video.querySelector('a')?.href || '';
-        const desc = video.querySelector('img')?.alt || '';
-        videos.push({ link, desc });
-      });
+      document
+        .querySelectorAll('div[data-e2e="challenge-video-list-item"]')
+        .forEach(video => {
+          const link = video.querySelector('a')?.href || '';
+          const desc = video.querySelector('img')?.alt || '';
+          videos.push({ link, desc });
+        });
       return videos;
     });
 
@@ -35,6 +40,9 @@ export default async function handler(req, res) {
     res.status(200).json({ status: 'ok', tag, videos: data });
   } catch (err) {
     if (browser) await browser.close();
-    res.status(500).json({ error: 'Erro ao buscar dados no TikTok', detalhe: err.message });
+    res.status(500).json({
+      error: 'Erro ao buscar dados no TikTok',
+      detalhe: err.stack || err.message,
+    });
   }
 }
