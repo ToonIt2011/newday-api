@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Servidor de proxies para o projeto NewDay (com API serverless)",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -18,8 +19,10 @@
     "google-trends-api": "^4.9.0",
     "groq-sdk": "^0.26.0",
     "next": "^14.2.30",
-    "puppeteer-core": "^21.11.0",
     "react": "18.2.0",
     "react-dom": "18.2.0"
+  },
+  "devDependencies": {
+    "puppeteer": "^24.11.2"
   }
 }
